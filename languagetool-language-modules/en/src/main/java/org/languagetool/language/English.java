@@ -208,7 +208,9 @@ public class English extends Language implements AutoCloseable {
         new SimpleReplaceRule(messages, this),
         new ReadabilityRule(messages, this, userConfig, false),
         new ReadabilityRule(messages, this, userConfig, true), 
-        new EnglishRepeatedWordsRule(messages)
+        new EnglishRepeatedWordsRule(messages),
+        // own rule
+        new Rule42()
     ));
     return allRules;
   }
