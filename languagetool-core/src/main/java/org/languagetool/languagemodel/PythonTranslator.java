@@ -21,9 +21,11 @@ import ai.djl.modality.Input;
 import ai.djl.modality.Output;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
+import ai.djl.ndarray.NDManager;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.translate.NoBatchifyTranslator;
 import ai.djl.translate.TranslateException;
+import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 
 import java.io.IOException;
@@ -32,39 +34,49 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class PythonTranslator implements NoBatchifyTranslator<String, Classifications> {
-
-  private ZooModel<Input, Output> model;
-  private Predictor<Input, Output> predictor;
+public class PythonTranslator implements Translator<String, String> {
 
   @Override
   public NDList processInput(TranslatorContext ctx, String sentence)
     throws IOException, TranslateException {
     HuggingFaceTokenizer tokenizer = HuggingFaceTokenizer.newInstance("bert-base-cased"); //set max_tokens to 50 here?
-    tokenizer.enableBatch(); // Sets padding and truncation to true TODO: figure out how to set to len 50?
-    Encoding tokenized = tokenizer.encode(sentence); // includes tokens and attention mask, can be cast to NDList directly
-    /*
-    String[] tokens = tokenized.getTokens();
-    long[] attention_mask = tokenized.getAttentionMask();
-    int size = tokens.length;
-    */
-    NDList processed_input = tokenized.toNDList(ctx.getNDManager(), true);
+    tokenizer.enableBatch(); // Sets padding and truncation to true TODO: figure out how to set to len 50? manual padding?
+    Encoding tokenizedInput = tokenizer.encode(sentence); // includes tokens and attention mask, can be cast to NDList directly
+
+    NDManager manager = ctx.getNDManager();
+
+    String[] tokens = tokenizedInput.getTokens();
+    System.out.println(tokens);
+    NDArray tokenArray = manager.create(tokens);
+
+    long[] attentionMask = tokenizedInput.getAttentionMask();
+    System.out.println(attentionMask);
+    NDArray attentionMaskArray = manager.create(attentionMask);
+
+    int numTokens = tokens.length; // TODO padding handling?
+    System.out.println("num_tokens: "+numTokens);
+    NDArray tokenNumArray = manager.create(numTokens);
+
+    // NDList processed_input = tokenizedInput.toNDList(ctx.getNDManager(), true);
     tokenizer.close();
-    // TODO add sequence length as single value NDArray to NDList?
-    return processed_input;
+
+    return new NDList(tokenArray, attentionMaskArray, tokenNumArray);
   }
 
   @Override
-  public Classifications processOutput(TranslatorContext ctx, NDList list){
-    //example code, TODO integrate GECTOR here
+  public String processOutput(TranslatorContext ctx, NDList list){
+    NDArray labelProbs = list.get(0);
+    NDArray dProbs = list.get(1);
+    NDArray incorrectProbs = list.get(2);
+
     /*
     we should be able to get the Label-probs, d-probs and incorrect-probs as arrays in the output NDList
-    and can map them to our desired output/pass-along types here
-     */
-    NDArray probabilities = list.singletonOrThrow().softmax(0);
-    List<String> classNames = IntStream.range(0, 10).mapToObj(String::valueOf).collect(Collectors.toList());
-    return new Classifications(classNames, probabilities);
+    and can either map them to our desired output here or just pass them along
+    */
 
+    String output = "label-probs: "+ labelProbs + "\nd-probs:" + dProbs + "\nincorr-probs:" + incorrectProbs;
+
+    return output;
   }
 
 }
