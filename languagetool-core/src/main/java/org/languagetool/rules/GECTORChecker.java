@@ -26,6 +26,7 @@ import org.languagetool.AnalyzedSentence;
 import org.languagetool.languagemodel.PythonTranslator;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,12 +61,22 @@ public class GECTORChecker extends Rule {
 
     PythonTranslator translator = new PythonTranslator(); // this is where the I/O pre- and postprocessing is defined!
 
+    // TODO: get import path to work... all of these throw IllegalArgumentExceptions
+    //String model_url = "jar:///org/languagetool/resource/gector_scripted.zip"; /// Resource not found: jar:///org/languagetool/resource/gector_scripted.zip
+    String model_url = "jar:///org/languagetool/resource"; //Only archive file is supported for res URL.
+    //String model_url = "jar:/org/languagetool/resource/gector_scripted.zip"; //Resource not found: jar:/org/languagetool/resource/gector_scripted.zip"
+    //String model_url = "jar:/org/languagetool/resource"; // Only archive file is supported for res URL.
+
+    // resolving over ModelName seems to work in the sense that it finds the files, but why does it not recognize it as an archive?
+
     Criteria criteria = Criteria.builder()
-      .setTypes(String.class, String.class)// I / O types of the processing pipeline
-      //.optModelPath(Paths.get("/languagetool-core/src/main/java/org/languagetool/languagemodel/gector_scripted"))
-      .optModelUrls("jar:///models")
-      .optModelName("gector_scripted.pt")
-      // TODO: get import path to work...
+      .setTypes(String.class, String.class) // I / O types of the processing pipeline
+
+      //.optModelPath(Paths.get("/org/languagetool/resource/gector_scripted.pt")) //supports .pt, but this does not work for loading models from a JAR file
+      .optModelUrls(model_url)
+      .optModelName("gector_scripted")
+      //.optModelName("gector_scripted.zip") // same results
+
       .optTranslator(translator)
       .optProgress(new ProgressBar()).build();
 
