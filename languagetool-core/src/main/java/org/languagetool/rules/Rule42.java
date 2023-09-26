@@ -21,6 +21,8 @@ package org.languagetool.rules;
 import org.languagetool.AnalyzedSentence;
 import org.languagetool.AnalyzedToken;
 import org.languagetool.AnalyzedTokenReadings;
+// import org.languagetool.gector.GectorInterface;
+import org.languagetool.gector.GectorInterface;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -53,6 +55,10 @@ public class Rule42 extends Rule {
   public RuleMatch[] match(AnalyzedSentence sentence) throws IOException {
 	  
 	System.out.println("Check for Rule42");
+	System.out.println("Sentence: " + sentence);
+	
+	GectorInterface s = new GectorInterface();
+	
     List<RuleMatch> ruleMatches = new ArrayList<>();
 
     // Let's get all the tokens (i.e. words) of this sentence, but not the spaces:
@@ -61,15 +67,20 @@ public class Rule42 extends Rule {
     // No let's iterate over those - note that the first token will
     // be a special token that indicates the start of a sentence:
     for (AnalyzedTokenReadings token : tokens) {
+    	
+      // Get token from gector and find postion in sentence. Then we don't need the tokens from the language tool at all.
+      System.out.println("Token: " + token);
+      System.out.println(token.getReadings());
  
       try {
     	// check if token is a number
         Double.parseDouble(token.getToken());
         
         // then
-        RuleMatch ruleMatch = new RuleMatch(this, sentence, token.getStartPos(), token.getEndPos(), "You are not using the number 42 here.");
-        ruleMatch.setSuggestedReplacement("42");  // the user will see this as a suggested correction
-        ruleMatches.add(ruleMatch);
+        // RuleMatch ruleMatch = new RuleMatch(this, sentence, token.getStartPos(), token.getEndPos(), "You are not using the number 42 here.");
+        // RuleMatch ruleMatch = new RuleMatch(this, sentence, 0, 5, "You are not using the number 42 here.");
+        // ruleMatch.setSuggestedReplacement("42");  // the user will see this as a suggested correction
+        // ruleMatches.add(ruleMatch);
         
 	  } catch(NumberFormatException e){  
 	    continue;
