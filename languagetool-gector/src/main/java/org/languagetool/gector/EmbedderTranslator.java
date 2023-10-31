@@ -28,7 +28,7 @@ public class EmbedderTranslator implements NoBatchifyTranslator<List, List> {
 		Translator<NDList, List> translator = (Translator<NDList, List>) new ProjectorTranslator();
 		Criteria<NDList, List> criteria = Criteria.builder()
   		      .setTypes(NDList.class, List.class)// I / O types of the processing pipeline
-  		      .optModelPath(Paths.get("/resources"))
+  		      .optModelUrls(getClass().getClassLoader().getResource("roberta_projector.pt").toString())
   		      .optModelName("roberta_projector.pt")
   		      .optTranslator(translator)
   		      .build();
@@ -36,7 +36,6 @@ public class EmbedderTranslator implements NoBatchifyTranslator<List, List> {
 	  	try {
 	  	      Model model = criteria.loadModel();
 	  	      this.projector = model.newPredictor(translator);
-	  	      System.out.println("roberta_projector loaded");
 	  	    } catch(Exception e) {
 	  	      System.out.println(e.getMessage());
 	  	      e.printStackTrace();

@@ -16,8 +16,6 @@ public class GectorInterface
 	public GectorInterface() {
 		try {
 			myGector = new Gector();
-			System.out.println("Gector init complete...");
-			correctSentenceAndPrint(myGector, "are you doing?");
 		} catch (IOException e) {
 			// TODO Happens when any file for the models is not found
 			e.printStackTrace();
@@ -29,16 +27,22 @@ public class GectorInterface
 			e.printStackTrace();
 		}
 	}
+	
+	public List<List<String>> correct(String sentence) {
+		return correctSentenceAndPrint(myGector, sentence);
+		
+		//if (result != null) {
+			//System.out.println(sentence);
+			//System.out.println(result);
+			//System.out.println(Arrays.toString(result.get(1).toArray()));
+			//String[] sent = new String[result.get(2).size()];
+			// System.out.println(String.join(" ", (String[]) result.get(2).toArray(sent)) + "\n");
+		//}
+	}
     
-    private static void correctSentenceAndPrint(Gector gec, String sentence) {
+    private static List<List<String>> correctSentenceAndPrint(Gector gec, String sentence) {
     	try {
-    		List<List<String>> result = gec.correct(sentence);
-    		if (result != null) {
-    			System.out.println(sentence);
-				System.out.println(Arrays.toString(result.get(1).toArray()));
-				String[] sent = new String[result.get(2).size()];
-				System.out.println(String.join(" ", (String[]) result.get(2).toArray(sent)) + "\n");
-    		}
+    		return gec.correct(sentence);
 		} catch (TranslateException e) {
 			// TODO This also shouldn't happen... If the model works correctly
 			e.printStackTrace();
@@ -46,6 +50,7 @@ public class GectorInterface
 			// TODO This only happens if Transform is not found. Which should never be the case actually
 			e.printStackTrace();
 		}
+    	return null;
     }
     
     

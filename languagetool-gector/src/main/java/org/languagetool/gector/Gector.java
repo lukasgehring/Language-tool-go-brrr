@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,7 +57,8 @@ public class Gector {
 		Translator<List, List> translator = this.translator;
 		Criteria<List, List> criteria = Criteria.builder()
   		      .setTypes(List.class, List.class)// I / O types of the processing pipeline
-  		      .optModelPath(Paths.get("src/"))
+  		      //.optModelPath(Paths.get("/home/lgehring/Documents/GitHub/Language-tool-go-brrr/languagetool-gector/target/classes/"))
+  		      .optModelUrls(getClass().getClassLoader().getResource("roberta_embedder.pt").toString())
   		      .optModelName("roberta_embedder.pt")
   		      .optTranslator(translator)
   		      .build();
