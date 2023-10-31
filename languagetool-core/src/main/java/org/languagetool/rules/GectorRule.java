@@ -26,7 +26,9 @@ import org.languagetool.gector.GectorInterface;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * A simple demo rule as an example for how to implement your own Java-based
@@ -38,55 +40,69 @@ import java.util.List;
  * <p>This rule works on sentences, extend {@link TextLevelRule} instead to work 
  * on the complete text.
  */
-public class Rule42 extends Rule {
+public class GectorRule extends Rule {
+	
+  private String description = "";
   
   @Override
   public String getId() {
-    return "RULE_42";  // a unique id that doesn't change over time
+    return "GectorRule";  // a unique id that doesn't change over time
   }
 
   @Override
   public String getDescription() {
-    return "A dummy rule that replace each number with 42";  // shown in the configuration dialog
+    return description;  // shown in the configuration dialog
   }
 
   // This is the method with the error detection logic that you need to implement:
   @Override
   public RuleMatch[] match(AnalyzedSentence sentence) throws IOException {
 	  
-	System.out.println("Check for Rule42");
-	System.out.println("Sentence: " + sentence);
+	// System.out.println("Check sentence with Gector2");
+	// System.out.println("Sentence: " + sentence.getText());
 	
 	GectorInterface s = new GectorInterface();
+	List<List<String>> result = s.correct(sentence.getText());
+	List<RuleMatch> ruleMatches = new ArrayList<>();
 	
-    List<RuleMatch> ruleMatches = new ArrayList<>();
-
-    // Let's get all the tokens (i.e. words) of this sentence, but not the spaces:
-    AnalyzedTokenReadings[] tokens = sentence.getTokensWithoutWhitespace();
-    
-    // No let's iterate over those - note that the first token will
-    // be a special token that indicates the start of a sentence:
-    for (AnalyzedTokenReadings token : tokens) {
-    	
-      // Get token from gector and find postion in sentence. Then we don't need the tokens from the language tool at all.
-      System.out.println("Token: " + token);
-      System.out.println(token.getReadings());
- 
-      try {
-    	// check if token is a number
-        Double.parseDouble(token.getToken());
-        
-        // then
-        // RuleMatch ruleMatch = new RuleMatch(this, sentence, token.getStartPos(), token.getEndPos(), "You are not using the number 42 here.");
-        // RuleMatch ruleMatch = new RuleMatch(this, sentence, 0, 5, "You are not using the number 42 here.");
-        // ruleMatch.setSuggestedReplacement("42");  // the user will see this as a suggested correction
-        // ruleMatches.add(ruleMatch);
-        
-	  } catch(NumberFormatException e){  
-	    continue;
-	  }  
-      
-    }
+	if (result != null) {
+		
+		// token
+		List<String> gector_token = result.get(0);
+		
+		// explanations
+		List<String> gector_hint = result.get(1);
+		
+		// correct sentence
+		List<String> gector_correct = result.get(2);
+		
+		
+		ListIterator<String> it = gector_hint.listIterator();
+		
+		// start idx of current token
+		int idx_count = 0;
+		
+		while (it.hasNext()) {
+			int idx = it.nextIndex();
+			String hint = it.next();
+			
+			if (idx == 0) {
+				continue;
+			} else if (hint == null || hint.isBlank()) {
+				idx_count += gector_token.get(idx-1).length();
+				continue;
+			} else {
+				
+				description = gector_hint.get(idx);
+				
+				RuleMatch ruleMatch = new RuleMatch(this, sentence, idx_count, idx_count + gector_token.get(idx-1).length(), gector_hint.get(idx));
+				ruleMatch.setSuggestedReplacement(gector_correct.get(idx-1));  // the user will see this as a suggested correction
+				ruleMatches.add(ruleMatch);
+				
+				idx_count += gector_token.get(idx-1).length();
+			}
+		}
+	}
 
     return toRuleMatchArray(ruleMatches);
   }
